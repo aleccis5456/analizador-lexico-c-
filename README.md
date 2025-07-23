@@ -63,13 +63,5 @@ The Laravel framework is open-sourced software licensed under the [MIT license](
 
 
 
-// Eliminar chequeo de `main`
-if (!preg_match('/\bmain\s*\([^)]*\)\s*\{/', $source)) {
-    $this->errors[] = "Error léxico: undefined reference to `main`";
-}
-
-// Eliminar chequeo de `;`
-if (preg_match_all('/[^\s{}][\r\n]+/', $sourceWithoutComments, $missingSemicolons, PREG_OFFSET_CAPTURE)) {
-    // remover este bloque
-}
+(?<simbolos>:[a-zA-Z_][a-zA-Z0-9_]*)
 
