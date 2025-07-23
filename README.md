@@ -63,14 +63,13 @@ The Laravel framework is open-sourced software licensed under the [MIT license](
 
 
 
-$pattern = <<<PATTERN
-~
-    (?<comentarios>\#.*?$) |
-    (?<comillas_dobles>"(?:\\.|[^\"])*") |
-    (?<comillas_simples>'(?:\\.|[^'])*') |
-    (?<operadores>\*\*|==|!=|>=|<=|&&|\|\||<<|>>|[-+*/%=<>&|!]) |
-    (?<reservadas>\b(def|class|module|end|if|else|elsif|unless|while|do|begin|rescue|ensure|case|when|then|yield|return|next|break|redo|retry|true|false|nil|and|or|not|self|super|in|unless)\b) |
-    (?<identificadores>\b[a-zA-Z_][a-zA-Z0-9_]*\b) |
-    (?<numeros>\d+(?:\.\d+)?) 
-~xms
-PATTERN;
+// Eliminar chequeo de `main`
+if (!preg_match('/\bmain\s*\([^)]*\)\s*\{/', $source)) {
+    $this->errors[] = "Error léxico: undefined reference to `main`";
+}
+
+// Eliminar chequeo de `;`
+if (preg_match_all('/[^\s{}][\r\n]+/', $sourceWithoutComments, $missingSemicolons, PREG_OFFSET_CAPTURE)) {
+    // remover este bloque
+}
+
