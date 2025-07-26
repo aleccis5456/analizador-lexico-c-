@@ -21,6 +21,19 @@ class Home extends Component
     public $grupo7;
     public $grupo8;
     public $errors = [];
+    public $tablaSimbolos = [];
+    public $guardarArchivo = false;
+
+    public function guardar_archivo()
+    {
+        $this->guardarArchivo = true;
+    }
+
+    public function guardar_archivo_false()
+    {
+        $this->guardarArchivo = false;
+    }
+
 
     public function compile()
     {
@@ -28,17 +41,19 @@ class Home extends Component
         $this->errors = [];
 
         $pattern = <<<PATTERN
-        ~
-            (?<comentarios>//.*?$) |
-            (?<comentarios_doble>/\*.*?\*/) |
-            (?<comillas_dobles>"(?:\\.|[^\"])*") |
-            (?<comillas_simples>'(?:\\.|[^'])*') |
-            (?<operadores>>=|<<=|>=|<=|==|!=|\+\+|--|\|\||&&|<<|>>|[-+*/%=<>&|;]) |
-            (?<reservadas>\b(printf|int|float|double|char|bool|if|else|for|while|do|return|void|break|continue|switch|case|default|const|class|public|using|namespace)\b) |
-            (?<identificadores>\b[a-zA-Z_][a-zA-Z0-9_]*\b) |
-            (?<numeros>\d+(?:\.\d+)?) |            
-        ~xms
+            ~
+                (?<comentarios>//.*?$) |
+                (?<comentarios_doble>/\*.*?\*/) |
+                (?<comillas_dobles>"(?:\\.|[^\"])*") |
+                (?<comillas_simples>'(?:\\.|[^'])*') |
+                (?<operadores>>=|<<=|>=|<=|==|!=|\+\+|--|\|\||&&|<<|>>|[-+*/%=<>&|;]) |
+                (?<reservadas>\b(printf|int|float|double|char|bool|if|else|for|while|do|return|void|break|continue|switch|case|default|const|class|public|using|namespace)\b) |
+                (?<identificadores>\b[a-zA-Z_][a-zA-Z0-9_]*\b) |
+                (?<numeros>\d+(?:\.\d+)?) |
+                (?<invalido>@)
+            ~xms
         PATTERN;
+
 
         $matches = [];
         $this->matchesd = $matches;
@@ -78,6 +93,7 @@ class Home extends Component
         if (!preg_match('/\bmain\s*\([^)]*\)\s*\{/', $source)) {
             $this->errors[] = "Error léxico: undefined reference to `main'";
         }
+
 
         //dd($invalidTokens);
         $openBraces = substr_count($source, '{');
@@ -129,10 +145,39 @@ class Home extends Component
             $this->errors[] = "Error léxico: Hay " . ($closeBraces - $openBraces) . " llave(s) de más `}`.";
         }
 
+
+        foreach ($matches as $match) {
+            // Agregar a la tabla de símbolos si es identificador
+            if (!empty($match['identificadores']) && $match['identificadores'][1] >= 0) {
+                $lexema = $match['identificadores'][0];
+                $pos = $match['identificadores'][1];
+
+                // Calcular línea
+                $line = substr_count(substr($source, 0, $pos), "\n") + 1;
+
+                // Evitar duplicados
+                if (!array_key_exists($lexema, $this->tablaSimbolos)) {
+                    $this->tablaSimbolos[$lexema] = [
+                        'lexema' => $lexema,
+                        'linea' => $line,
+                    ];
+                }
+            }
+        }
+
+        foreach ($matches as $match) {
+            if (!empty($match['invalido']) && $match['invalido'][1] >= 0) {
+                //$char = $match['invalido'][0];
+                $pos = $match['invalido'][1];
+                $this->errors[] = $this->getErrorPosition($source, $pos, "Carácter inválido");
+            }
+        }
+
+
         // Resaltado de sintaxis
         $callback = function ($matches) {
             if (!empty($matches['comentarios'])) {
-                return '<span class="text-gray-500 italic">' . htmlspecialchars($matches['comentarios']) . '</span>';                            
+                return '<span class="text-gray-500 italic">' . htmlspecialchars($matches['comentarios']) . '</span>';
             } elseif (!empty($matches['comentarios_doble'])) {
                 return '<span class="text-gray-500 italic">' . htmlspecialchars($matches['comentarios_doble']) . '</span>';
             } elseif (!empty($matches['comillas_dobles'])) {
@@ -181,6 +226,17 @@ class Home extends Component
 
         return "Error léxico en línea$lineNumber, columna $column: '"
             . htmlspecialchars(substr($text, 0, 30)) . "'";
+    }
+
+    public function tabla_base()
+    {
+        //dd('fd');  
+        $this->compile();
+    }
+    public function exportarCodigo()
+    {
+        //dd('/ds');
+        return redirect()->route('descargar', ['codigo' => $this->textoPlano]);
     }
 
     public function render()

@@ -1,0 +1,21 @@
+# Comentario de una línea
+
+class Persona
+  attr_accessor :nombre, :edad
+
+  def initialize(nombre, edad)
+    @nombre = nombre
+    @edad = edad
+  end
+
+  def saludar
+    if @edad >= 18
+      puts "Hola, soy #{@nombre} y soy mayor de edad"
+    else
+      puts 'Hola, soy menor'
+    end
+  end
+end
+
+persona = Persona.new("Alexis", 22)
+persona.saludar
