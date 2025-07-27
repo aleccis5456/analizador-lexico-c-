@@ -142,3 +142,26 @@ public function compile()
 
     $this->code = preg_replace_callback($pattern, $callback, $source);
 }
+
+
+//table
+
+
+  foreach ($matches as $match) {
+            // Agregar a la tabla de símbolos si es identificador
+            if (!empty($match['identificadores']) && $match['identificadores'][1] >= 0) {
+                $lexema = $match['identificadores'][0];
+                $pos = $match['identificadores'][1];
+
+                // Calcular línea
+                $line = substr_count(substr($source, 0, $pos), "\n") + 1;
+
+                // Evitar duplicados
+                if (!array_key_exists($lexema, $this->tablaSimbolos)) {
+                    $this->tablaSimbolos[$lexema] = [
+                        'lexema' => $lexema,
+                        'linea' => $line,
+                    ];
+                }
+            }
+        }
