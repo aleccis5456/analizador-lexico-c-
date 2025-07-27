@@ -1,167 +1,19 @@
-# Comentario de una línea
-
-class Persona
-  attr_accessor :nombre, :edad
-
-  def initialize(nombre, edad)
-    @nombre = nombre
-    @edad = edad
-  end
-
-  def saludar
-    if @edad >= 18
-      puts "Hola, soy #{@nombre} y soy mayor de edad"
-    else
-      puts 'Hola, soy menor'
-    end
-  end
-end
-
-persona = Persona.new("Alexis", 22)
-persona.saludar
-
-
-
-public function compile()
-{
-    $source = $this->textoPlano;
-    $this->errors = [];
-
-    $pattern = <<<PATTERN
-        ~
-            (?<comentarios>\#.*?$) |
-            (?<comillas_dobles>"(?:\\\\.|[^"])*") |
-            (?<comillas_simples>'(?:\\\\.|[^'])*') |
-            (?<simbolos>:\w+) |
-            (?<operadores>==|!=|<=|>=|<=>|=~|!~|\.\.\.?|&&|\|\||[=+\-*/%<>!]) |
-            (?<reservadas>\b(alias|and|begin|break|case|class|def|defined\\?|do|else|elsif|end|ensure|false|for|if|in|module|next|nil|not|or|redo|rescue|retry|return|self|super|then|true|undef|unless|until|when|while|yield)\b) |
-            (?<identificadores>@{1,2}?[a-zA-Z_][a-zA-Z0-9_]*[!?=]?) |
-            (?<numeros>\b\d+(?:\.\d+)?\b) |
-            (?<invalido>[^a-zA-Z0-9_@:\s'"#=+\-*/%<>!().{}[\]\\])
-        ~xms
-    PATTERN;
-
-    $matches = [];
-    preg_match_all($pattern, $source, $matches, PREG_SET_ORDER | PREG_OFFSET_CAPTURE);
-
-    $this->matchesd = $matches;
-
-    // Contadores por tipo de token
-    $grupos = array_fill(1, 8, 0);
-    foreach ($matches as $match) {
-        for ($i = 1; $i <= 8; $i++) {
-            if (!empty($match[$i]) && $match[$i][1] >= 0) {
-                $grupos[$i]++;
-            }
-        }
-    }
-
-    $this->grupo1 = $grupos[1]; // comentarios
-    $this->grupo2 = $grupos[2]; // comillas dobles
-    $this->grupo3 = $grupos[3]; // comillas simples
-    $this->grupo4 = $grupos[4]; // simbolos
-    $this->grupo5 = $grupos[5]; // operadores
-    $this->grupo6 = $grupos[6]; // reservadas
-    $this->grupo7 = $grupos[7]; // identificadores
-    $this->grupo8 = $grupos[8]; // numeros
-
-    // Validar comillas
-    $this->quotes = substr_count($source, '"') + substr_count($source, "'");
-    if ($this->quotes % 2 != 0) {
-        $this->errors[] = "Error léxico: número impar de comillas, puede faltar cerrar una cadena.";
-    }
-
-    // Validar paréntesis
-    $openPar = substr_count($source, '(');
-    $closePar = substr_count($source, ')');
-    if ($openPar > $closePar) {
-        $this->errors[] = "Error léxico: Falta " . ($openPar - $closePar) . " paréntesis de cierre `)`.";
-    } elseif ($closePar > $openPar) {
-        $this->errors[] = "Error léxico: Hay " . ($closePar - $openPar) . " paréntesis de más `)`.";
-    }
-
-    // Validar corchetes y llaves
-    $openBrackets = substr_count($source, '[');
-    $closeBrackets = substr_count($source, ']');
-    if ($openBrackets !== $closeBrackets) {
-        $this->errors[] = "Error léxico: desbalance de corchetes [].";
-    }
-
-    $openBraces = substr_count($source, '{');
-    $closeBraces = substr_count($source, '}');
-    if ($openBraces !== $closeBraces) {
-        $this->errors[] = "Error léxico: desbalance de llaves {}.";
-    }
-
-    // Tabla de símbolos
-    foreach ($matches as $match) {
-        if (!empty($match['identificadores']) && $match['identificadores'][1] >= 0) {
-            $lexema = $match['identificadores'][0];
-            $pos = $match['identificadores'][1];
-            $line = substr_count(substr($source, 0, $pos), "\n") + 1;
-
-            if (!array_key_exists($lexema, $this->tablaSimbolos)) {
-                $this->tablaSimbolos[$lexema] = [
-                    'lexema' => $lexema,
-                    'linea' => $line,
-                ];
-            }
-        }
-    }
-
-    // Tokens inválidos
-    foreach ($matches as $match) {
-        if (!empty($match['invalido']) && $match['invalido'][1] >= 0) {
-            $pos = $match['invalido'][1];
-            $this->errors[] = $this->getErrorPosition($source, $pos, "Carácter inválido");
-        }
-    }
-
-    // Resaltado de sintaxis
-    $callback = function ($matches) {
-        if (!empty($matches['comentarios'])) {
-            return '<span class="text-gray-500 italic">' . htmlspecialchars($matches['comentarios']) . '</span>';
-        } elseif (!empty($matches['comillas_dobles'])) {
-            return '<span class="text-green-400">' . htmlspecialchars($matches['comillas_dobles']) . '</span>';
-        } elseif (!empty($matches['comillas_simples'])) {
-            return '<span class="text-green-400">' . htmlspecialchars($matches['comillas_simples']) . '</span>';
-        } elseif (!empty($matches['simbolos'])) {
-            return '<span class="text-pink-400">' . htmlspecialchars($matches['simbolos']) . '</span>';
-        } elseif (!empty($matches['operadores'])) {
-            return '<span class="text-purple-400">' . htmlspecialchars($matches['operadores']) . '</span>';
-        } elseif (!empty($matches['reservadas'])) {
-            return '<span class="text-blue-400 font-bold">' . htmlspecialchars($matches['reservadas']) . '</span>';
-        } elseif (!empty($matches['identificadores'])) {
-            return '<span class="text-red-400">' . htmlspecialchars($matches['identificadores']) . '</span>';
-        } elseif (!empty($matches['numeros'])) {
-            return '<span class="text-yellow-300">' . htmlspecialchars($matches['numeros']) . '</span>';
-        } else {
-            return '<span class="text-white">' . htmlspecialchars($matches[0]) . '</span>';
-        }
-    };
-
-    $this->code = preg_replace_callback($pattern, $callback, $source);
-}
-
-
-//table
-
-
-  foreach ($matches as $match) {
-            // Agregar a la tabla de símbolos si es identificador
-            if (!empty($match['identificadores']) && $match['identificadores'][1] >= 0) {
-                $lexema = $match['identificadores'][0];
-                $pos = $match['identificadores'][1];
-
-                // Calcular línea
-                $line = substr_count(substr($source, 0, $pos), "\n") + 1;
-
-                // Evitar duplicados
-                if (!array_key_exists($lexema, $this->tablaSimbolos)) {
-                    $this->tablaSimbolos[$lexema] = [
-                        'lexema' => $lexema,
-                        'linea' => $line,
-                    ];
-                }
-            }
-        }
+ @if (!empty($tablaSimbolos))
+            <h2 class="text-xl font-bold text-white mt-6 mb-2">Tabla de Símbolos</h2>
+            <table class="w-full text-sm text-left text-white border border-gray-700">
+                <thead class="bg-gray-700 text-gray-300">
+                    <tr>
+                        <th class="px-4 py-2 border border-gray-600">Lexema</th>
+                        <th class="px-4 py-2 border border-gray-600">Línea</th>
+                    </tr>
+                </thead>
+                <tbody class="bg-gray-800">
+                    @foreach ($tablaSimbolos as $simbolo)
+                        <tr>
+                            <td class="px-4 py-2 border border-gray-600">{{ $simbolo['lexema'] }}</td>
+                            <td class="px-4 py-2 border border-gray-600">{{ $simbolo['linea'] }}</td>
+                        </tr>
+                    @endforeach
+                </tbody>
+            </table>
+        @endif
